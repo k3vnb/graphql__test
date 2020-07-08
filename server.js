@@ -27,6 +27,7 @@ const AuthorType = new GraphQLObjectType({
 
 const BookType = new GraphQLObjectType({
   name: "Book",
+  isInputObjectType: true,
   description: "This represents a book written by an author",
   fields: () => ({
     id: { type: GraphQLNonNull(GraphQLInt) },
@@ -45,7 +46,7 @@ const RootQueryType = new GraphQLObjectType({
   fields: () => ({
     book: {
       type: BookType,
-      description: 'A Single Book',
+      description: "A Single Book",
       args: {
         id: { type: GraphQLInt },
       },
@@ -65,15 +66,58 @@ const RootQueryType = new GraphQLObjectType({
       type: AuthorType,
       description: "A Single Author",
       args: {
-        id: { type: GraphQLInt }
+        id: { type: GraphQLInt },
       },
-      resolve: (_parent, args) => authors.find(({ id }) => id === args.id)
+      resolve: (_parent, args) => authors.find(({ id }) => id === args.id),
+    },
+  }),
+});
+
+const RootMutationType = new GraphQLObjectType({
+  name: "Mutation",
+  description: "Root Mutation",
+  isOutputType: true,
+  fields: () => ({
+    addBook: {
+      type: BookType,
+      description: "Add a Book",
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+        authorId: { type: GraphQLNonNull(GraphQLInt) },
+      },
+      resolve: (_parent, args) => {
+        console.log(args);
+        const book = {
+          id: books.length + 1,
+          name: args.name,
+          authorId: args.authorId,
+        };
+        books.push(book);
+        return book;
+      },
+    },
+    addAuthor: {
+      type: AuthorType,
+      description: "Add a Author",
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+      },
+      resolve: (_parent, args) => {
+        console.log(args);
+        const author = {
+          id: authors.length + 1,
+          name: args.name,
+        };
+        authors.push(author);
+        return author;
+      },
     },
   }),
 });
 
 const schema = new GraphQLSchema({
   query: RootQueryType,
+  mutation: RootMutationType,
 });
 
 app.use(
